@@ -1,14 +1,14 @@
 {
-	"geode": "$GEODE_VERSION",
+	"geode": "1.6.1",
 	"gd": {
 		"win": "2.2074",
 		"android": "2.2074",
 		"mac": "2.2074",
 		"ios": "2.2074"
 	},
-	"id": "$MOD_ID",
-	"name": "$MOD_NAME",
-	"version": "$MOD_VERSION",
-	"developer": "$MOD_DEVELOPER",
+	"id": "com.danz.dmhack",
+	"name": "DMHACK",
+	"version": "1.0.0",
+	"developer": "$Da4nz",
 	"description": "$MOD_DESCRIPTION"
 }
