@@ -1,0 +1,115 @@
+name: Combine Geode mods
+description: Combines the same Geode mod built for different platforms into a single file
+
+inputs:
+  cli:
+    description: Which CLI version to use, defaults to latest release.
+    required: false
+    default: latest
+  delete-artifacts:
+    description: Whether to delete temporary artifacts left by the build action.
+    required: false
+    default: true
+
+outputs:
+  build-output:
+    description: A folder containing the built .geode file(s)
+    value: ${{ steps.merge.outputs.output }}
+
+runs:
+  using: composite
+  steps:
+    - name: Download CLI
+      uses: robinraju/release-downloader@v1.10
+      with:
+        repository: geode-sdk/cli
+        latest: ${{ inputs.cli == 'latest' }}
+        tag: ${{ inputs.cli != 'latest' && inputs.cli || '' }}
+        tarBall: false
+        zipBall: false
+        fileName: "*-linux.zip"
+        extract: true
+        out-file-path: ${{ github.action_path }}
+
+    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
+      shell: bash
+
+    - uses: actions/download-artifact@v4
+      with:
+        path: "${{ github.action_path }}/artifacts"
+
+    - name: Combine them
+      shell: bash
+      id: merge
+      run: |
+        cd "${{ github.action_path }}"
+        chmod +x ./geode
+        mkdir out
+        MODS=$(find . -name *.geode -type f -printf "%f\n" | sort -u)
+        for mod in $MODS; do
+          echo "Merging $mod"
+          PACKAGE_ARGS=""
+          if [ -f "./artifacts/geode-build-win/$mod" ]; then
+            PACKAGE_ARGS="$PACKAGE_ARGS ./artifacts/geode-build-win/$mod"
+          fi
+          if [ -f "./artifacts/geode-build-mac/$mod" ]; then
+            PACKAGE_ARGS="$PACKAGE_ARGS ./artifacts/geode-build-mac/$mod"
+          fi
+          if [ -f "./artifacts/geode-build-android32/$mod" ]; then
+            PACKAGE_ARGS="$PACKAGE_ARGS ./artifacts/geode-build-android32/$mod"
+          fi
+          if [ -f "./artifacts/geode-build-android64/$mod" ]; then
+            PACKAGE_ARGS="$PACKAGE_ARGS ./artifacts/geode-build-android64/$mod"
+          fi
+          if [ -f "./artifacts/geode-build-ios/$mod" ]; then
+            PACKAGE_ARGS="$PACKAGE_ARGS ./artifacts/geode-build-ios/$mod"
+          fi
+          ARG_LIST=($PACKAGE_ARGS)
+          # why does it merge into the first one instead of just an output..
+          FIRST="${ARG_LIST[0]}"
+          if [ ${#ARG_LIST[@]} != 1 ]; then
+            geode package merge $PACKAGE_ARGS
+          fi
+          cp $FIRST out
+        done
+        # Copy the .pdb file from windows artifact if it exists
+        cp ./artifacts/geode-build-win/*.pdb out/ || true
+        # Copy the .sym files from android artifacts if they exist
+        cp ./artifacts/geode-build-android32/*.sym out/ || true
+        cp ./artifacts/geode-build-android64/*.sym out/ || true
+        # Copy the other debug files from android and macos/ios
+        cp ./artifacts/geode-build-android32/*.dbg out/ || true
+        cp ./artifacts/geode-build-android64/*.dbg out/ || true
+        cp -R ./artifacts/geode-build-mac/*.dSYM out/ || true
+        cp -R ./artifacts/geode-build-ios/*.dSYM out/ || true
+        echo "output=$(realpath out)" >> $GITHUB_OUTPUT
+
+    - uses: geekyeggo/delete-artifact@v5
+      if: ${{ inputs.delete-artifacts }}
+      with:
+          name: geode-build-win
+          failOnError: false
+
+    - uses: geekyeggo/delete-artifact@v5
+      if: ${{ inputs.delete-artifacts }}
+      with:
+          name: geode-build-mac
+          failOnError: false
+
+    - uses: geekyeggo/delete-artifact@v5
+      if: ${{ inputs.delete-artifacts }}
+      with:
+          name: geode-build-ios
+          failOnError: false
+
+    - uses: geekyeggo/delete-artifact@v5
+      if: ${{ inputs.delete-artifacts }}
+      with:
+          name: geode-build-android32
+          failOnError: false
+
+    - uses: geekyeggo/delete-artifact@v5
+      if: ${{ inputs.delete-artifacts }}
+      with:
+          name: geode-build-android64
+          failOnError: false
