@@ -3,8 +3,9 @@
 #include <Geode/modify/EndLevelLayer.hpp>
 #include <Geode/utils/web.hpp>
 #include <Geode/binding/GJAccountManager.hpp>
-#include <Geode/binding/PlayLayer.hpp>      // untuk m_playLayer
-#include <Geode/binding/GJGameLevel.hpp>    // untuk m_stars
+#include <Geode/binding/PlayLayer.hpp>
+#include <Geode/binding/GJGameLevel.hpp>
+#include <Geode/binding/EndLevelLayer.hpp>   // confirmed binding
 #include <matjson.hpp>
 #include <fmt/format.h>
 #include <ctime>
@@ -14,45 +15,28 @@ using namespace geode::prelude;
 
 std::vector<std::string> getQuotes(bool roast) {
     if (roast) {
-        return {
-            "Skill issue lagi bro 😂",
-            "Mati terus? Classic GD noob",
-            "Another one bites the dust 💀",
-            "Try harder next time kiddo",
-            "GD players when they see a spike: 😭"
-        };
+        return {"Skill issue lagi bro 😂", "Mati terus? Classic GD noob", "Another one bites the dust 💀", "Try harder next time kiddo", "GD players when they see a spike: 😭"};
     }
-    return {
-        "Keep grinding king! 🔥",
-        "Progress is progress, mantap!",
-        "You're getting better every day!",
-        "Streak on fire! Jangan berhenti",
-        "Legendary effort, keep it up!"
-    };
+    return {"Keep grinding king! 🔥", "Progress is progress, mantap!", "You're getting better every day!", "Streak on fire! Jangan berhenti", "Legendary effort, keep it up!"};
 }
 
 void sendRecap() {
     auto mod = Mod::get();
     std::string url = mod->getSettingValue<std::string>("webhook-url");
-    if (url.empty()) {
-        log::warn("Webhook URL kosong bro, recap skip.");
-        return;
-    }
+    if (url.empty()) return;
 
     std::string name = "Player";
     if (auto acc = GJAccountManager::sharedState()) {
-        if (!acc->m_username.empty()) {
-            name = acc->m_username;
-        }
+        if (!acc->m_username.empty()) name = acc->m_username;
     }
 
     bool roast = mod->getSettingValue<bool>("roast-mode");
 
-    int deaths  = mod->getSavedValue<int>("totalDeaths", 0);
-    int levels  = mod->getSavedValue<int>("totalLevels", 0);
-    int stars   = mod->getSavedValue<int>("totalStars", 0);
-    int moons   = mod->getSavedValue<int>("totalMoons", 0);
-    int streak  = mod->getSavedValue<int>("streak", 0);
+    int deaths = mod->getSavedValue<int>("totalDeaths", 0);
+    int levels = mod->getSavedValue<int>("totalLevels", 0);
+    int stars  = mod->getSavedValue<int>("totalStars", 0);
+    int moons  = mod->getSavedValue<int>("totalMoons", 0);
+    int streak = mod->getSavedValue<int>("streak", 0);
 
     auto quotes = getQuotes(roast);
     std::srand(static_cast<unsigned>(std::time(nullptr)));
@@ -65,7 +49,7 @@ void sendRecap() {
         "🌙 **Total Moons**: {}\n"
         "💀 **Total Deaths**: {}\n"
         "🏆 **Levels Beaten**: {}\n"
-        "🔥 **Streak**: {} hari berturut-turut\n\n"
+        "🔥 **Streak**: {} hari\n\n"
         "💬 {}\n\nKeep pushing! 💪",
         name, stars, moons, deaths, levels, streak, quote
     );
@@ -76,14 +60,7 @@ void sendRecap() {
     web::WebRequest()
         .post(url, json.dump())
         .header("Content-Type", "application/json")
-        .fetch()
-        .then([](web::WebResponse res) {
-            if (res.ok()) {
-                log::info("Recap sukses dikirim ke Discord!");
-            } else {
-                log::error("Gagal kirim recap: {}", res.error());
-            }
-        });
+        .fetch();
 }
 
 void checkAndSend() {
@@ -94,46 +71,36 @@ void checkAndSend() {
     auto now = static_cast<long long>(std::time(nullptr)) / 86400LL;
     auto last = mod->getSavedValue<long long>("lastSentDay", 0LL);
 
-    bool shouldSend = false;
-    if (freq == "daily" && now > last) shouldSend = true;
-    else if (freq == "weekly" && (now / 7) > (last / 7)) shouldSend = true;
+    bool should = false;
+    if (freq == "daily" && now > last) should = true;
+    else if (freq == "weekly" && (now / 7) > (last / 7)) should = true;
 
-    if (shouldSend) {
+    if (should) {
         sendRecap();
         mod->setSavedValue("lastSentDay", now);
-
-        int streak = mod->getSavedValue<int>("streak", 0) + 1;
-        mod->setSavedValue("streak", streak);
+        mod->setSavedValue("streak", mod->getSavedValue<int>("streak", 0) + 1);
     }
 }
 
 $modify(PlayLayer) {
-    void destroyPlayer(PlayerObject* player, GameObject* obj) {
-        PlayLayer::destroyPlayer(player, obj);
-
-        auto deaths = Mod::get()->getSavedValue<int>("totalDeaths", 0) + 1;
-        Mod::get()->setSavedValue("totalDeaths", deaths);
+    void destroyPlayer(PlayerObject* p, GameObject* o) {
+        PlayLayer::destroyPlayer(p, o);
+        Mod::get()->setSavedValue("totalDeaths", Mod::get()->getSavedValue<int>("totalDeaths", 0) + 1);
     }
 };
 
 $modify(EndLevelLayer) {
-    bool init(PlayLayer* playLayer) {
+    bool init(PlayLayer* playLayer) {   // ← signature resmi dari Geode Docs 2.2081
         if (!EndLevelLayer::init(playLayer)) return false;
 
-        if (playLayer && playLayer->m_level && this->m_levelComplete) {
+        if (playLayer && playLayer->m_level && m_levelComplete) {
             auto lvl = playLayer->m_level;
 
-            auto levels = Mod::get()->getSavedValue<int>("totalLevels", 0) + 1;
-            auto stars  = Mod::get()->getSavedValue<int>("totalStars", 0) + lvl->m_stars;
-            auto moons  = Mod::get()->getSavedValue<int>("totalMoons", 0);  // + logic moons kalau ada
-
-            Mod::get()->setSavedValue("totalLevels", levels);
-            Mod::get()->setSavedValue("totalStars", stars);
-            Mod::get()->setSavedValue("totalMoons", moons);
+            Mod::get()->setSavedValue("totalLevels", Mod::get()->getSavedValue<int>("totalLevels", 0) + 1);
+            Mod::get()->setSavedValue("totalStars", Mod::get()->getSavedValue<int>("totalStars", 0) + lvl->m_stars);
 
             checkAndSend();
         }
-
         return true;
     }
 };
