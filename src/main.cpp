@@ -1,6 +1,5 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
-#include <Geode/modify/EndLevelLayer.hpp>
 #include <Geode/utils/web.hpp>
 #include <Geode/binding/GJAccountManager.hpp>
 #include <Geode/binding/PlayLayer.hpp>
@@ -79,7 +78,9 @@ class $modify(PlayLayer) {
     }
 };
 
-class $modify(EndLevelLayer) {
+#include <Geode/modify/EndLevelLayer.hpp>
+
+class $modify(EndLevelLayer, #include <Geode/modify/EndLevelLayer.hpp>) {
     bool init(PlayLayer* playLayer) {
         if (!EndLevelLayer::init(playLayer)) return false;
 
