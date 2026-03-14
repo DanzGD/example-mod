@@ -4,7 +4,6 @@
 #include <Geode/binding/GJAccountManager.hpp>
 #include <Geode/binding/PlayLayer.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
-#include <Geode/modify/EndLevelLayer.hpp>
 using namespace geode::prelude;
 
 std::vector<std::string> getQuotes(bool roast) {
@@ -80,15 +79,13 @@ class $modify(PlayLayer) {
 };
 
 class $modify(EndLevelLayer) {
-    GEODE_MODIFY_HOOK(bool, EndLevelLayer, init, PlayLayer* playLayer) {
-        if (!EndLevelLayer::init(playLayer)) return false;
-
-        if (playLayer && playLayer->m_level) {
+    void onQuit() {
+        if (auto playLayer = PlayLayer::get()) {
             auto lvl = playLayer->m_level;
             Mod::get()->setSavedValue("totalLevels", Mod::get()->getSavedValue<int>("totalLevels", 0) + 1);
             Mod::get()->setSavedValue("totalStars", Mod::get()->getSavedValue<int>("totalStars", 0) + lvl->m_stars);
             checkAndSend();
         }
-        return true;
+        EndLevelLayer::onQuit();
     }
 };
