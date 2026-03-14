@@ -4,6 +4,7 @@
 #include <Geode/binding/GJAccountManager.hpp>
 #include <Geode/binding/PlayLayer.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
+#include <Geode/modify/EndLevelLayer.hpp>
 using namespace geode::prelude;
 
 std::vector<std::string> getQuotes(bool roast) {
@@ -78,11 +79,8 @@ class $modify(PlayLayer) {
     }
 };
 
-#include <Geode/modify/EndLevelLayer.hpp>
-
-
 class $modify(EndLevelLayer) {
-    bool init(PlayLayer* playLayer) {
+    GEODE_MODIFY_HOOK(bool, EndLevelLayer, init, PlayLayer* playLayer) {
         if (!EndLevelLayer::init(playLayer)) return false;
 
         if (playLayer && playLayer->m_level) {
