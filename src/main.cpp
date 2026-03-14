@@ -50,10 +50,10 @@ void sendRecap() {
     matjson::Value json = matjson::Value::object();
     json["content"] = msg;
 
-    web::WebRequest req;
-    req.bodyJSON(json);
-    req.header("Content-Type", "application/json");
-    req.post(url);   // fire and forget — sesuai docs Geode
+    web::WebRequest()
+        .bodyJSON(json)
+        .header("Content-Type", "application/json")
+        .post(url);
 }
 
 void checkAndSend() {
@@ -86,7 +86,7 @@ $modify(EndLevelLayer) {
     bool init(PlayLayer* playLayer) {
         if (!EndLevelLayer::init(playLayer)) return false;
 
-        if (playLayer && playLayer->m_level && this->m_levelComplete) {
+        if (playLayer && playLayer->m_level && playLayer->m_levelComplete) {
             auto lvl = playLayer->m_level;
 
             Mod::get()->setSavedValue("totalLevels", Mod::get()->getSavedValue<int>("totalLevels", 0) + 1);
