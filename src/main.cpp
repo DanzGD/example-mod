@@ -1,59 +1,97 @@
 #include <Geode/Geode.hpp>
-#include <Geode/modify/EditorUI.hpp>
+#include <Geode/utils/web.hpp>
+#include <ctime>
+#include <vector>
+#include <cstdlib>
 
 using namespace geode::prelude;
 
-// Kita memodifikasi "EditorUI" (Tampilan antarmuka Editor)
-class $modify(MyEditorUI, EditorUI) {
-    
-    // Fungsi init berjalan saat kita masuk ke Editor
-    bool init(LevelEditorLayer* editorLayer) {
-        // Jalankan kode asli game dulu agar editor muncul normal
-        if (!EditorUI::init(editorLayer)) {
-            return false;
-        }
+std::vector<std::string> getQuotes(bool roast) {
+    if (roast) {
+        return {"Skill issue lagi bro 😂", "Mati terus? Classic GD noob", "Another one bites the dust 💀", "Try harder next time kiddo", "GD players when they see a spike: 😭"};
+    } else {
+        return {"Keep grinding king! 🔥", "Progress is progress, mantap!", "You're getting better every day!", "Streak on fire! Jangan berhenti", "Legendary effort, keep it up!"};
+    }
+}
 
-        // 1. Buat Menu (Wadah untuk tombol)
-        auto myMenu = CCMenu::create();
-        
-        // Atur posisi menu (X=30 di kiri, Y=tinggi layar - 50 pixel)
-        auto winSize = CCDirector::sharedDirector()->getWinSize();
-        myMenu->setPosition({30, winSize.height - 50});
-        
-        // Beri ID agar kompatibel dengan mod lain
-        myMenu->setID("quick-save-menu"_spr);
-        
-        // Masukkan menu ke layar editor
-        this->addChild(myMenu);
+void sendRecap() {
+    std::string url = Mod::get()->getSettingValue<std::string>("webhook-url");
+    if (url.empty()) return;
 
-        // 2. Buat Gambar Tombol (Menggunakan gambar Save bawaan game)
-        auto sprite = CCSprite::createWithSpriteFrameName("GJ_saveBtn_001.png");
-        sprite->setScale(0.6f); // Kecilkan sedikit agar tidak menghalangi
+    std::string name = Mod::get()->getSettingValue<std::string>("custom-name");
+    bool roast = Mod::get()->getSettingValue<bool>("roast-mode");
 
-        // 3. Buat Tombolnya dan hubungkan ke fungsi "onQuickSave"
-        auto btn = CCMenuItemSpriteExtra::create(
-            sprite,
-            this,
-            menu_selector(MyEditorUI::onQuickSave)
-        );
-        
-        // Masukkan tombol ke dalam menu
-        myMenu->addChild(btn);
+    int deaths = Mod::get()->getSavedValue<int>("totalDeaths", 0);
+    int levels = Mod::get()->getSavedValue<int>("totalLevels", 0);
+    int stars = Mod::get()->getSavedValue<int>("totalStars", 0);
+    int streak = Mod::get()->getSavedValue<int>("streak", 0);
 
-        return true;
+    auto quotes = getQuotes(roast);
+    srand(static_cast<unsigned>(time(nullptr)));
+    std::string quote = quotes[rand() % quotes.size()];
+
+    std::string msg = fmt::format(
+        "**🦾 GD Progress Bot Recap**\n\n"
+        "👤 **{}**\n"
+        "⭐ **Total Stars**: {}\n"
+        "💀 **Total Deaths**: {}\n"
+        "🏆 **Levels Beaten**: {}\n"
+        "🔥 **Streak**: {} hari berturut-turut\n\n"
+        "💬 {}\n\nKeep pushing! 💪",
+        name, stars, deaths, levels, streak, quote
+    );
+
+    auto json = matjson::Value();
+    json["content"] = msg;
+    web::WebRequest().post(url).json(json).fetch();
+}
+
+void checkAndSend() {
+    std::string freq = Mod::get()->getSettingValue<std::string>("frequency");
+    if (freq != "daily" && freq != "weekly") return;
+
+    long long now = time(nullptr) / 86400LL;
+    long long lastSent = Mod::get()->getSavedValue<long long>("lastSentDay", 0);
+
+    bool should = false;
+    if (freq == "daily" && now > lastSent) should = true;
+    else if (freq == "weekly" && (now / 7) > (lastSent / 7)) should = true;
+
+    if (should) {
+        sendRecap();
+        Mod::get()->setSavedValue("lastSentDay", now);
+    }
+}
+
+class $modify(PlayLayer) {
+    void destroyPlayer(PlayerObject* player, GameObject* object) {
+        PlayLayer::destroyPlayer(player, object);
+        int deaths = Mod::get()->getSavedValue<int>("totalDeaths", 0) + 1;
+        Mod::get()->setSavedValue("totalDeaths", deaths);
+        checkAndSend();
     }
 
-    // Fungsi yang jalan saat tombol dipencet
-    void onQuickSave(CCObject* sender) {
-        // Memanggil fungsi asli "onSave" milik EditorUI
-        this->onSave(nullptr);
+    void levelComplete() {
+        PlayLayer::levelComplete();
+        if (m_level) {
+            int starsEarned = m_level->m_stars;
+            int levels = Mod::get()->getSavedValue<int>("totalLevels", 0) + 1;
+            int totalStars = Mod::get()->getSavedValue<int>("totalStars", 0) + starsEarned;
+            Mod::get()->setSavedValue("totalLevels", levels);
+            Mod::get()->setSavedValue("totalStars", totalStars);
 
-        // Opsional: Munculkan notifikasi kecil (NotificationToast)
-        // Agar kita tahu save berhasil tanpa popup yang mengganggu
-        Notification::create(
-            "Level Saved!", 
-            NotificationIcon::Success, 
-            0.5f // Durasi notifikasi
-        )->show();
+            long long now = time(nullptr) / 86400LL;
+            long long lastDay = Mod::get()->getSavedValue<long long>("lastActiveDay", 0);
+            int streak = Mod::get()->getSavedValue<int>("streak", 0);
+            if (now == lastDay + 1) streak++;
+            else if (now > lastDay + 1) streak = 1;
+            Mod::get()->setSavedValue("streak", streak);
+            Mod::get()->setSavedValue("lastActiveDay", now);
+        }
+        checkAndSend();
     }
 };
+
+$execute {
+    srand(static_cast<unsigned>(time(nullptr)));
+}
