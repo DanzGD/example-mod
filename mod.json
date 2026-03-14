@@ -1,17 +1,31 @@
 {
-    "geode": "1.7.3",  // atau versi terbaru, cek docs kalau perlu update
-    "id": "com.danz.webhookmod",  // ganti sesuai ID mod kamu
-    "name": "Webhook Notif Mod",
-    "version": "1.0.0",
-    "description": "Kirim notif ke Discord webhook tiap mati di level",
-    "settings": {
-        "webhook-url": {
-            "type": "string",
-            "name": "Webhook URL",
-            "description": "Paste Discord webhook URL kamu di sini (buat di channel Discord → Integrations → Webhooks)",
-            "default": "",
-            "match": "^https?://discord\\.com/api/webhooks/.*",  // validasi sederhana biar mirip URL webhook Discord
-            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~:/?#[]@!$&'()*+,;=%"
-        }
+  "geode": "1.7.3",
+  "id": "com.danz.gdprogressbot",
+  "name": "GD Progress Bot",
+  "version": "1.0.0",
+  "description": "Auto kirim recap progress GD ke Discord! Deaths, streak, stars + quote lucu.",
+  "settings": {
+    "webhook-url": {
+      "type": "string",
+      "name": "Webhook URL",
+      "description": "Paste Discord Webhook URL kamu (buat di Integrations → Webhooks)",
+      "default": ""
+    },
+    "frequency": {
+      "type": "string",
+      "name": "Frekuensi Recap",
+      "description": "Ketik 'daily' atau 'weekly' (otomatis kirim setelah selesai level)",
+      "default": "daily"
+    },
+    "roast-mode": {
+      "type": "bool",
+      "name": "Mode Roast (bikin savage & lucu)",
+      "default": true
+    },
+    "custom-name": {
+      "type": "string",
+      "name": "Nama Kamu di Recap",
+      "default": "Danz"
     }
+  }
 }
