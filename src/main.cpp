@@ -5,6 +5,7 @@
 #include <Geode/binding/GJAccountManager.hpp>
 #include <Geode/binding/PlayLayer.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
+#include <Geode/binding/EndLevelLayer.hpp>
 
 using namespace geode::prelude;
 
@@ -50,10 +51,10 @@ void sendRecap() {
     matjson::Value json = matjson::Value::object();
     json["content"] = msg;
 
-    web::WebRequest()
+    (void) web::WebRequest()
         .bodyJSON(json)
         .header("Content-Type", "application/json")
-        .post(url);
+        .post(url);  // (void) ignore nodiscard warning
 }
 
 void checkAndSend() {
@@ -86,7 +87,7 @@ $modify(EndLevelLayer) {
     bool init(PlayLayer* playLayer) {
         if (!EndLevelLayer::init(playLayer)) return false;
 
-        if (playLayer && playLayer->m_level && playLayer->m_levelComplete) {
+        if (playLayer && playLayer->m_level && this->m_levelComplete) {  // ← this->m_levelComplete di EndLevelLayer
             auto lvl = playLayer->m_level;
 
             Mod::get()->setSavedValue("totalLevels", Mod::get()->getSavedValue<int>("totalLevels", 0) + 1);
