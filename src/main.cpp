@@ -78,6 +78,8 @@ class $modify(PlayLayer) {
     }
 };
 
+#include <Geode/modify/EndLevelLayer.hpp>
+
 class $modify(EndLevelLayer) {
     void onQuit() {
         if (auto playLayer = PlayLayer::get()) {
