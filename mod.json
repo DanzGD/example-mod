@@ -1,14 +1,17 @@
 {
-	"geode": "1.6.1",
-	"gd": {
-		"win": "2.2074",
-		"android": "2.2074",
-		"mac": "2.2074",
-		"ios": "2.2074"
-	},
-	"id": "com.fast-save-button",
-	"name": "Fast Save Button",
-	"version": "1.0.0",
-	"developer": "$Da4nz",
-	"description": "$MOD_DESCRIPTION"
+    "geode": "1.7.3",  // atau versi terbaru, cek docs kalau perlu update
+    "id": "com.danz.webhookmod",  // ganti sesuai ID mod kamu
+    "name": "Webhook Notif Mod",
+    "version": "1.0.0",
+    "description": "Kirim notif ke Discord webhook tiap mati di level",
+    "settings": {
+        "webhook-url": {
+            "type": "string",
+            "name": "Webhook URL",
+            "description": "Paste Discord webhook URL kamu di sini (buat di channel Discord → Integrations → Webhooks)",
+            "default": "",
+            "match": "^https?://discord\\.com/api/webhooks/.*",  // validasi sederhana biar mirip URL webhook Discord
+            "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~:/?#[]@!$&'()*+,;=%"
+        }
+    }
 }
