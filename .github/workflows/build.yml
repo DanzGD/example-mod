@@ -1,0 +1,47 @@
+name: Build Geode Mod (Multi-Platform)
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: Windows
+            os: windows-latest
+          - name: macOS
+            os: macos-latest
+          - name: Android32
+            os: ubuntu-latest
+            target: Android32
+          - name: Android64
+            os: ubuntu-latest
+            target: Android64
+          - name: iOS
+            os: macos-latest
+            target: iOS
+
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build with build-geode-mod
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          path: .
+          build-config: RelWithDebInfo
+          target: ${{ matrix.config.target }}
+
+      - name: Upload Build Output
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-${{ matrix.config.name }}
+          path: ./build/artifacts/*
