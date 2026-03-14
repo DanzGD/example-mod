@@ -5,7 +5,6 @@
 #include <Geode/binding/GJAccountManager.hpp>
 #include <Geode/binding/PlayLayer.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
-
 using namespace geode::prelude;
 
 std::vector<std::string> getQuotes(bool roast) {
@@ -24,11 +23,10 @@ void sendRecap() {
     }
 
     bool roast = mod->getSettingValue<bool>("roast-mode");
-
     int deaths = mod->getSavedValue<int>("totalDeaths", 0);
     int levels = mod->getSavedValue<int>("totalLevels", 0);
-    int stars  = mod->getSavedValue<int>("totalStars", 0);
-    int moons  = mod->getSavedValue<int>("totalMoons", 0);
+    int stars = mod->getSavedValue<int>("totalStars", 0);
+    int moons = mod->getSavedValue<int>("totalMoons", 0);
     int streak = mod->getSavedValue<int>("streak", 0);
 
     auto quotes = getQuotes(roast);
@@ -49,7 +47,6 @@ void sendRecap() {
 
     matjson::Value json = matjson::Value::object();
     json["content"] = msg;
-
     (void) web::WebRequest()
         .bodyJSON(json)
         .header("Content-Type", "application/json")
@@ -63,8 +60,8 @@ void checkAndSend() {
 
     auto now = static_cast<long long>(std::time(nullptr)) / 86400LL;
     auto last = mod->getSavedValue<long long>("lastSentDay", 0LL);
-
     bool should = false;
+
     if (freq == "daily" && now > last) should = true;
     else if (freq == "weekly" && (now / 7) > (last / 7)) should = true;
 
@@ -75,27 +72,23 @@ void checkAndSend() {
     }
 }
 
-$modify(PlayLayer) {
+class $modify(PlayLayer) {
     void destroyPlayer(PlayerObject* p, GameObject* o) {
         PlayLayer::destroyPlayer(p, o);
         Mod::get()->setSavedValue("totalDeaths", Mod::get()->getSavedValue<int>("totalDeaths", 0) + 1);
     }
 };
 
-$modify(EndLevelLayer) {
+class $modify(EndLevelLayer) {
     bool init(PlayLayer* playLayer) {
         if (!EndLevelLayer::init(playLayer)) return false;
 
-        // EndLevelLayer muncul = level selesai (win). Gak perlu check flag lagi.
         if (playLayer && playLayer->m_level) {
             auto lvl = playLayer->m_level;
-
             Mod::get()->setSavedValue("totalLevels", Mod::get()->getSavedValue<int>("totalLevels", 0) + 1);
             Mod::get()->setSavedValue("totalStars", Mod::get()->getSavedValue<int>("totalStars", 0) + lvl->m_stars);
-
             checkAndSend();
         }
-
         return true;
     }
 };
