@@ -1,5 +1,12 @@
 {
   "geode": "5.3.0",
+  "gd": {
+    "win": "2.208",
+    "android32": "2.208",
+    "android64": "2.208",
+    "mac": "2.208",
+    "ios": "2.208"
+  },
   "id": "com.danz.gdprogressbot",
   "name": "GD Progress Bot",
   "version": "1.0.0",
