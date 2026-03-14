@@ -78,6 +78,9 @@ class $modify(PlayLayer) {
     }
 };
 
+#include <Geode/modify/EndLevelLayer.hpp>
+
+
 class $modify(EndLevelLayer) {
     bool init(PlayLayer* playLayer) {
         if (!EndLevelLayer::init(playLayer)) return false;
