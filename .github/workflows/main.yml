@@ -85,7 +85,7 @@ jobs:
             --arg mod_id "com.danz.gdprogression" \
             --arg mod_name "Daily Progress" \
             --arg mod_version "1.0.0" \
-            --arg mod_description "The example Geode mod!" \
+            --arg mod_description "Mod ini secara otomatis mengirimkan recap progres harian atau mingguan Geometry Dash kamu ke server Discord melalui Webhook. Yang dikirim meliputi nama akun GD asli, jumlah stars, moons, streak harian, deaths, levels beaten, dan pesan motivasi atau roast. Sangat cocok untuk tracking progres dan seru-seruan bersama komunitas teman!" \
             --arg developer "DanDaDanz" \
             '.geode = $geode_version |
             .id = $mod_id |
