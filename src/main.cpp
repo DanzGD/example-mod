@@ -3,6 +3,8 @@
 #include <Geode/modify/EndLevelLayer.hpp>
 #include <Geode/utils/web.hpp>
 #include <Geode/binding/GJAccountManager.hpp>
+#include <Geode/binding/PlayLayer.hpp>      // untuk m_playLayer
+#include <Geode/binding/GJGameLevel.hpp>    // untuk m_stars
 #include <matjson.hpp>
 #include <fmt/format.h>
 #include <ctime>
@@ -33,7 +35,7 @@ void sendRecap() {
     auto mod = Mod::get();
     std::string url = mod->getSettingValue<std::string>("webhook-url");
     if (url.empty()) {
-        log::warn("Webhook URL kosong, recap dibatalkan.");
+        log::warn("Webhook URL kosong bro, recap skip.");
         return;
     }
 
@@ -68,17 +70,16 @@ void sendRecap() {
         name, stars, moons, deaths, levels, streak, quote
     );
 
-    matjson::Value json = matjson::Value::object({
-        {"content", msg}
-    });
+    matjson::Value json = matjson::Value::object();
+    json["content"] = msg;
 
     web::WebRequest()
         .post(url, json.dump())
         .header("Content-Type", "application/json")
         .fetch()
-        .then([=](web::WebResponse res) {
+        .then([](web::WebResponse res) {
             if (res.ok()) {
-                log::info("✅ Recap dikirim ke Discord!");
+                log::info("Recap sukses dikirim ke Discord!");
             } else {
                 log::error("Gagal kirim recap: {}", res.error());
             }
@@ -91,7 +92,7 @@ void checkAndSend() {
     if (freq != "daily" && freq != "weekly") return;
 
     auto now = static_cast<long long>(std::time(nullptr)) / 86400LL;
-    auto last = mod->getSavedValue<long long>("lastSentDay", 0);
+    auto last = mod->getSavedValue<long long>("lastSentDay", 0LL);
 
     bool shouldSend = false;
     if (freq == "daily" && now > last) shouldSend = true;
@@ -110,20 +111,21 @@ $modify(PlayLayer) {
     void destroyPlayer(PlayerObject* player, GameObject* obj) {
         PlayLayer::destroyPlayer(player, obj);
 
-        int deaths = Mod::get()->getSavedValue<int>("totalDeaths", 0) + 1;
+        auto deaths = Mod::get()->getSavedValue<int>("totalDeaths", 0) + 1;
         Mod::get()->setSavedValue("totalDeaths", deaths);
     }
 };
 
 $modify(EndLevelLayer) {
-    bool init(GJGameLevel* level, GJLevelType type) {  // signature umum di 2.2081
-        if (!EndLevelLayer::init(level, type)) return false;
+    bool init(PlayLayer* playLayer) {
+        if (!EndLevelLayer::init(playLayer)) return false;
 
-        // Update stats hanya kalau level complete (bukan practice)
-        if (this->m_levelComplete) {
-            int levels = Mod::get()->getSavedValue<int>("totalLevels", 0) + 1;
-            int stars  = Mod::get()->getSavedValue<int>("totalStars", 0) + level->m_stars;
-            int moons  = Mod::get()->getSavedValue<int>("totalMoons", 0);  // + moons kalau support
+        if (playLayer && playLayer->m_level && this->m_levelComplete) {
+            auto lvl = playLayer->m_level;
+
+            auto levels = Mod::get()->getSavedValue<int>("totalLevels", 0) + 1;
+            auto stars  = Mod::get()->getSavedValue<int>("totalStars", 0) + lvl->m_stars;
+            auto moons  = Mod::get()->getSavedValue<int>("totalMoons", 0);  // + logic moons kalau ada
 
             Mod::get()->setSavedValue("totalLevels", levels);
             Mod::get()->setSavedValue("totalStars", stars);
