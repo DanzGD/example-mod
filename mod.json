@@ -3,7 +3,7 @@
   "id": "com.danz.gdprogressbot",
   "name": "GD Progress Bot",
   "version": "1.0.0",
-  "description": "Auto kirim recap progress GD ke Discord! Deaths, streak, stars + quote lucu.",
+  "description": "Mod ini secara otomatis mengirimkan recap progres harian atau mingguan Geometry Dash kamu ke server Discord melalui Webhook. Yang dikirim meliputi nama akun GD asli, jumlah stars, moons, streak harian, deaths, levels beaten, dan pesan motivasi atau roast. Sangat cocok untuk tracking progres dan seru-seruan bersama komunitas teman!",
   "settings": {
     "webhook-url": {
       "type": "string",
@@ -14,18 +14,13 @@
     "frequency": {
       "type": "string",
       "name": "Frekuensi Recap",
-      "description": "Ketik 'daily' atau 'weekly' (otomatis kirim setelah selesai level)",
+      "description": "Pilih frekuensi recap otomatis yang dikirimkan: 'daily' (harian) atau 'weekly' (mingguan). Akan otomatis kirim saat level selesai.",
       "default": "daily"
     },
     "roast-mode": {
       "type": "bool",
       "name": "Mode Roast (bikin savage & lucu)",
       "default": true
-    },
-    "custom-name": {
-      "type": "string",
-      "name": "Nama Kamu di Recap",
-      "default": "Danz"
     }
   }
 }
