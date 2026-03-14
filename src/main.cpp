@@ -86,7 +86,8 @@ $modify(EndLevelLayer) {
     bool init(PlayLayer* playLayer) {
         if (!EndLevelLayer::init(playLayer)) return false;
 
-        if (playLayer && playLayer->m_level && playLayer->m_levelComplete) {
+        // EndLevelLayer muncul = level selesai (win). Gak perlu check flag lagi.
+        if (playLayer && playLayer->m_level) {
             auto lvl = playLayer->m_level;
 
             Mod::get()->setSavedValue("totalLevels", Mod::get()->getSavedValue<int>("totalLevels", 0) + 1);
@@ -94,6 +95,7 @@ $modify(EndLevelLayer) {
 
             checkAndSend();
         }
+
         return true;
     }
 };
