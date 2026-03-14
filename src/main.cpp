@@ -1,8 +1,8 @@
 #include <Geode/Geode.hpp>
-#include <Geode/utils/web.hpp>
-#include <Geode/binding/GJAccountManager.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/EndLevelLayer.hpp>
+#include <Geode/utils/web.hpp>
+#include <Geode/binding/GJAccountManager.hpp>
 #include <matjson.hpp>
 #include <fmt/format.h>
 #include <ctime>
@@ -32,11 +32,16 @@ std::vector<std::string> getQuotes(bool roast) {
 void sendRecap() {
     auto mod = Mod::get();
     std::string url = mod->getSettingValue<std::string>("webhook-url");
-    if (url.empty()) return;
+    if (url.empty()) {
+        log::warn("Webhook URL kosong, recap dibatalkan.");
+        return;
+    }
 
     std::string name = "Player";
     if (auto acc = GJAccountManager::sharedState()) {
-        if (!acc->m_username.empty()) name = acc->m_username;
+        if (!acc->m_username.empty()) {
+            name = acc->m_username;
+        }
     }
 
     bool roast = mod->getSettingValue<bool>("roast-mode");
@@ -49,7 +54,7 @@ void sendRecap() {
 
     auto quotes = getQuotes(roast);
     std::srand(static_cast<unsigned>(std::time(nullptr)));
-    std::string quote = quotes[rand() % quotes.size()];
+    std::string quote = quotes[std::rand() % quotes.size()];
 
     std::string msg = fmt::format(
         "**🦾 GD Progress Bot Recap**\n\n"
@@ -63,15 +68,21 @@ void sendRecap() {
         name, stars, moons, deaths, levels, streak, quote
     );
 
-    matjson::Value json;
-    json["content"] = msg;
+    matjson::Value json = matjson::Value::object({
+        {"content", msg}
+    });
 
-    // Kirim ke Discord (async)
-    web::WebRequest().post(url, json.dump())
+    web::WebRequest()
+        .post(url, json.dump())
         .header("Content-Type", "application/json")
-        .fetch();
-
-    log::info("✅ Recap dikirim ke Discord!");
+        .fetch()
+        .then([=](web::WebResponse res) {
+            if (res.ok()) {
+                log::info("✅ Recap dikirim ke Discord!");
+            } else {
+                log::error("Gagal kirim recap: {}", res.error());
+            }
+        });
 }
 
 void checkAndSend() {
@@ -79,8 +90,8 @@ void checkAndSend() {
     std::string freq = mod->getSettingValue<std::string>("frequency");
     if (freq != "daily" && freq != "weekly") return;
 
-    long long now = static_cast<long long>(std::time(nullptr)) / 86400LL;
-    long long last = mod->getSavedValue<long long>("lastSentDay", 0);
+    auto now = static_cast<long long>(std::time(nullptr)) / 86400LL;
+    auto last = mod->getSavedValue<long long>("lastSentDay", 0);
 
     bool shouldSend = false;
     if (freq == "daily" && now > last) shouldSend = true;
@@ -90,35 +101,29 @@ void checkAndSend() {
         sendRecap();
         mod->setSavedValue("lastSentDay", now);
 
-        // Update streak (hanya +1 tiap recap berhasil)
         int streak = mod->getSavedValue<int>("streak", 0) + 1;
         mod->setSavedValue("streak", streak);
     }
 }
 
-// Hook kematian (untuk hitung deaths)
-class $modify(PlayLayer) {
-    void destroyPlayer(PlayerObject* player, GameObject* object) {
-        PlayLayer::destroyPlayer(player, object);
+$modify(PlayLayer) {
+    void destroyPlayer(PlayerObject* player, GameObject* obj) {
+        PlayLayer::destroyPlayer(player, obj);
+
         int deaths = Mod::get()->getSavedValue<int>("totalDeaths", 0) + 1;
         Mod::get()->setSavedValue("totalDeaths", deaths);
     }
 };
 
-// Hook utama: saat End Level Screen muncul (lebih stabil daripada levelComplete)
-class $modify(EndLevelLayer) {
-    bool init(PlayLayer* playLayer) {
-        if (!EndLevelLayer::init(playLayer)) return false;
+$modify(EndLevelLayer) {
+    bool init(GJGameLevel* level, GJLevelType type) {  // signature umum di 2.2081
+        if (!EndLevelLayer::init(level, type)) return false;
 
-        if (playLayer && playLayer->m_level) {
-            auto lvl = playLayer->m_level;
-
-            int starsEarned = lvl->m_stars;
-            int moonsEarned = 0; // 2.2 platformer moons (bisa di-upgrade nanti)
-
+        // Update stats hanya kalau level complete (bukan practice)
+        if (this->m_levelComplete) {
             int levels = Mod::get()->getSavedValue<int>("totalLevels", 0) + 1;
-            int stars  = Mod::get()->getSavedValue<int>("totalStars", 0) + starsEarned;
-            int moons  = Mod::get()->getSavedValue<int>("totalMoons", 0) + moonsEarned;
+            int stars  = Mod::get()->getSavedValue<int>("totalStars", 0) + level->m_stars;
+            int moons  = Mod::get()->getSavedValue<int>("totalMoons", 0);  // + moons kalau support
 
             Mod::get()->setSavedValue("totalLevels", levels);
             Mod::get()->setSavedValue("totalStars", stars);
@@ -126,6 +131,7 @@ class $modify(EndLevelLayer) {
 
             checkAndSend();
         }
+
         return true;
     }
 };
