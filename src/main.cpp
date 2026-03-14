@@ -5,18 +5,11 @@
 #include <Geode/binding/GJAccountManager.hpp>
 #include <Geode/binding/PlayLayer.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
-#include <Geode/binding/EndLevelLayer.hpp>   // confirmed binding
-#include <matjson.hpp>
-#include <fmt/format.h>
-#include <ctime>
-#include <cstdlib>
 
 using namespace geode::prelude;
 
 std::vector<std::string> getQuotes(bool roast) {
-    if (roast) {
-        return {"Skill issue lagi bro 😂", "Mati terus? Classic GD noob", "Another one bites the dust 💀", "Try harder next time kiddo", "GD players when they see a spike: 😭"};
-    }
+    if (roast) return {"Skill issue lagi bro 😂", "Mati terus? Classic GD noob", "Another one bites the dust 💀", "Try harder next time kiddo", "GD players when they see a spike: 😭"};
     return {"Keep grinding king! 🔥", "Progress is progress, mantap!", "You're getting better every day!", "Streak on fire! Jangan berhenti", "Legendary effort, keep it up!"};
 }
 
@@ -57,10 +50,10 @@ void sendRecap() {
     matjson::Value json = matjson::Value::object();
     json["content"] = msg;
 
-    web::WebRequest()
-        .post(url, json.dump())
-        .header("Content-Type", "application/json")
-        .fetch();
+    web::WebRequest req;
+    req.bodyJSON(json);
+    req.header("Content-Type", "application/json");
+    req.post(url);   // fire and forget — sesuai docs Geode
 }
 
 void checkAndSend() {
@@ -90,10 +83,10 @@ $modify(PlayLayer) {
 };
 
 $modify(EndLevelLayer) {
-    bool init(PlayLayer* playLayer) {   // ← signature resmi dari Geode Docs 2.2081
+    bool init(PlayLayer* playLayer) {
         if (!EndLevelLayer::init(playLayer)) return false;
 
-        if (playLayer && playLayer->m_level && m_levelComplete) {
+        if (playLayer && playLayer->m_level && this->m_levelComplete) {
             auto lvl = playLayer->m_level;
 
             Mod::get()->setSavedValue("totalLevels", Mod::get()->getSavedValue<int>("totalLevels", 0) + 1);
