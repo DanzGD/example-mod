@@ -82,11 +82,11 @@ jobs:
           # Replace the placeholders
           updated_mod_json=$(echo "$mod_json" | jq \
             --arg geode_version "$GEODE_VERSION" \
-            --arg mod_id "geode.example" \
-            --arg mod_name "Example Mod" \
-            --arg mod_version "0.0.0" \
+            --arg mod_id "com.danz.gdprogression" \
+            --arg mod_name "Daily Progress" \
+            --arg mod_version "1.0.0" \
             --arg mod_description "The example Geode mod!" \
-            --arg developer "Geode Team" \
+            --arg developer "DanDaDanz" \
             '.geode = $geode_version |
             .id = $mod_id |
             .name = $mod_name |
