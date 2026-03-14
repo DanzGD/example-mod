@@ -60,7 +60,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          repository: geode-sdk/example-mod
+          repository: DanzGD/example-mod
           path: ${{ env.test-mod-path }}
 
       - name: Modify Example Mod Files
