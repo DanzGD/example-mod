@@ -88,6 +88,6 @@ class $modify(EndLevelLayer) {
             Mod::get()->setSavedValue("totalStars", Mod::get()->getSavedValue<int>("totalStars", 0) + lvl->m_stars);
             checkAndSend();
         }
-        EndLevelLayer::onQuit();
+        this->onQuit();
     }
 };
