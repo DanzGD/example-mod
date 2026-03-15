@@ -83,9 +83,9 @@ jobs:
           updated_mod_json=$(echo "$mod_json" | jq \
             --arg geode_version "$GEODE_VERSION" \
             --arg mod_id "com.danz.gdprogression" \
-            --arg mod_name "Daily Progress" \
+            --arg mod_name "Discord Status" \
             --arg mod_version "1.0.0" \
-            --arg mod_description "Mod ini secara otomatis mengirimkan recap progres harian atau mingguan Geometry Dash kamu ke server Discord melalui Webhook. Yang dikirim meliputi nama akun GD asli, jumlah stars, moons, streak harian, deaths, levels beaten, dan pesan motivasi atau roast. Sangat cocok untuk tracking progres dan seru-seruan bersama komunitas teman!" \
+            --arg mod_description "Discord Status adalah mod yang memberi status kamu ke server mu menggunakan webhook." \
             --arg developer "DanDaDanz" \
             '.geode = $geode_version |
             .id = $mod_id |
