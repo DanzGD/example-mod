@@ -6,35 +6,17 @@
     "mac": "2.2081",
     "ios": "2.2081"
   },
-  "id": "com.danz.gdprogressbot",
-  "name": "GD Progress Bot",
+  "id": "com.danz.accountstatus",
+  "name": "Discord Status",
   "developer": "Danz",
   "version": "1.0.0",
-  "description": "Mod ini secara otomatis mengirimkan recap progres harian atau mingguan Geometry Dash kamu ke server Discord melalui Webhook. Yang dikirim meliputi nama akun GD asli, jumlah stars, moons, streak harian, deaths, levels beaten, dan pesan motivasi atau roast. Sangat cocok untuk tracking progres dan seru-seruan bersama komunitas teman!",
-  "tags": [
-    "utility",
-    "online",
-    "enhancement",
-    "joke"
-  ],
+  "description": "Discord Status adalah mod yang memberi status kamu ke server mu menggunakan webhook.",
+  "tags": ["utility", "online", "enchanment"],
   "settings": {
     "webhook-url": {
       "type": "string",
-      "name": "Webhook URL",
-      "description": "Paste Discord Webhook URL kamu (buat di Integrations → Webhooks). On Android, tap away from keyboard after pasting to save!",
+      "name": "Discord Webhook URL",
       "default": ""
-    },
-    "frequency": {
-      "type": "string",
-      "name": "Frekuensi Recap",
-      "description": "Pilih 'daily' (harian) atau 'weekly' (mingguan). Recap otomatis kirim saat level selesai.",
-      "default": "daily"
-    },
-    "roast-mode": {
-      "type": "bool",
-      "name": "Mode Roast (savage & lucu)",
-      "description": "Aktifkan kalau mau roast savage setiap recap (atau mati).",
-      "default": true
     }
   }
 }
