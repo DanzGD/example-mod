@@ -31,6 +31,11 @@ class $modify(MyPlayLayer, PlayLayer) {
         m_fields->deathStreak = 0;
     }
 
+    float getPercent() {
+        // Implementasi fungsi getPercent()
+        return 0.0.0f;
+    }
+
     void update(float dt) {
         PlayLayer::update(dt);
         lastUpdate += dt;
