@@ -32,7 +32,7 @@ class $modify(MyPlayLayer, PlayLayer) {
     }
 
     float getPercent() {
-        return PlayLayer::getPercent();
+        return m_player->getPositionX() / m_level->m_levelLength * 100;
     }
 
     void update(float dt) {
@@ -44,4 +44,23 @@ class $modify(MyPlayLayer, PlayLayer) {
         std::string url = mod->getSettingValue<std::string>("webhook-url");
         if (url.empty() || !m_level) return;
         // Ambil nama akun GD asli
-        std::string gdName =
+        std::string gdName = "Player";
+        if (auto acc = GJAccountManager::sharedState()) {
+            if (!acc->m_username.empty()) gdName = acc->m_username;
+        }
+        m_fields->m_percent = this->getPercent();
+        std::string mood = getMood(m_fields->deathStreak, m_fields->m_percent);
+        matjson::Value embed = matjson::Value::object();
+        embed["title"] = "🎮 " + gdName + " is playing Geometry Dash";
+        embed["description"] = fmt::format("**{}**\n**{:.1f}%** • {}", m_level->m_levelName, m_fields->m_percent, mood);
+        embed["color"] = (mood == "⚡ God Mode") ? 0x00FF00 : (mood == "😭 Tilt Mode" ? 0xFF0000 : 0xFFFF00);
+        matjson::Value payload = matjson::Value::object();
+        matjson::Value embeds = matjson::Value::array();
+        embeds.push_back(embed);
+        payload["embeds"] = embeds;
+        (void) web::WebRequest()
+            .bodyJSON(payload)
+            .header("Content-Type", "application/json")
+            .post(url);
+    }
+};
