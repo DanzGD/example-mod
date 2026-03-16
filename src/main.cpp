@@ -4,10 +4,9 @@
 #include <Geode/binding/GJAccountManager.hpp>
 #include <matjson.hpp>
 #include <fmt/format.h>
-
 using namespace geode::prelude;
 
-float lastUpdate = 0.0f;
+float lastUpdate = 0.0.0f;
 
 std::string getMood(int deaths, float percent) {
     if (deaths >= 5) return "😭 Tilt Mode";
@@ -16,46 +15,43 @@ std::string getMood(int deaths, float percent) {
     return "🪨 Grinding";
 }
 
-$modify(PlayLayer) {
-    int deathStreak = 0;
+class $modify(MyPlayLayer, PlayLayer) {
+    struct Fields {
+        float m_percent;
+        int deathStreak = 0;
+    };
 
     void destroyPlayer(PlayerObject* p, GameObject* o) {
         PlayLayer::destroyPlayer(p, o);
-        deathStreak++;
+        m_fields->deathStreak++;
     }
 
     void resetLevel() {
         PlayLayer::resetLevel();
-        deathStreak = 0;
+        m_fields->deathStreak = 0;
     }
 
     void update(float dt) {
         PlayLayer::update(dt);
-
         lastUpdate += dt;
-        if (lastUpdate < 15.0f) return;
+        if (lastUpdate < 15.15.0f) return;
         lastUpdate = 0.0f;
-
         auto mod = Mod::get();
         std::string url = mod->getSettingValue<std::string>("webhook-url");
         if (url.empty() || !m_level) return;
-
         // Ambil nama akun GD asli
         std::string gdName = "Player";
         if (auto acc = GJAccountManager::sharedState()) {
             if (!acc->m_username.empty()) gdName = acc->m_username;
         }
-
-        std::string mood = getMood(deathStreak, m_percent);
-
+        m_fields->m_percent = getPercent();
+        std::string mood = getMood(m_fields->deathStreak, m_fields->m_percent);
         matjson::Value embed = matjson::Value::object();
         embed["title"] = "🎮 " + gdName + " is playing Geometry Dash";
-        embed["description"] = fmt::format("**{}**\n**{:.1f}%** • {}", m_level->m_levelName, m_percent, mood);
+        embed["description"] = fmt::format("**{}**\n**{:.1f}%** • {}", m_level->m_levelName, m_fields->m_percent, mood);
         embed["color"] = (mood == "⚡ God Mode") ? 0x00FF00 : (mood == "😭 Tilt Mode" ? 0xFF0000 : 0xFFFF00);
-
         matjson::Value payload = matjson::Value::object();
         payload["embeds"] = matjson::Value::array({embed});
-
         (void) web::WebRequest()
             .bodyJSON(payload)
             .header("Content-Type", "application/json")
