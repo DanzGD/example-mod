@@ -6,7 +6,7 @@
 #include <fmt/format.h>
 using namespace geode::prelude;
 
-float lastUpdate = 0.0.0f;
+float lastUpdate = 0.0f;
 
 std::string getMood(int deaths, float percent) {
     if (deaths >= 5) return "😭 Tilt Mode";
@@ -32,7 +32,7 @@ class $modify(MyPlayLayer, PlayLayer) {
     }
 
     float getPercent() {
-        return PlayLayer::getPercent();
+        return this->getPercent();
     }
 
     void update(float dt) {
