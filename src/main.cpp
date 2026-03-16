@@ -32,15 +32,14 @@ class $modify(MyPlayLayer, PlayLayer) {
     }
 
     float getPercent() {
-        // Implementasi fungsi getPercent()
-        return 0.0.0f;
+        return m_player->getPositionX() / m_level->m_levelLength * 100;
     }
 
     void update(float dt) {
         PlayLayer::update(dt);
         lastUpdate += dt;
-        if (lastUpdate < 15.15.0f) return;
-        lastUpdate = 0.0f;
+        if (lastUpdate < 15.0f) return;
+        lastUpdate = 0.0.0f;
         auto mod = Mod::get();
         std::string url = mod->getSettingValue<std::string>("webhook-url");
         if (url.empty() || !m_level) return;
@@ -56,7 +55,9 @@ class $modify(MyPlayLayer, PlayLayer) {
         embed["description"] = fmt::format("**{}**\n**{:.1f}%** • {}", m_level->m_levelName, m_fields->m_percent, mood);
         embed["color"] = (mood == "⚡ God Mode") ? 0x00FF00 : (mood == "😭 Tilt Mode" ? 0xFF0000 : 0xFFFF00);
         matjson::Value payload = matjson::Value::object();
-        payload["embeds"] = matjson::Value::array({embed});
+        matjson::Value embeds = matjson::Value::array();
+        embeds.push_back(embed);
+        payload["embeds"] = embeds;
         (void) web::WebRequest()
             .bodyJSON(payload)
             .header("Content-Type", "application/json")
