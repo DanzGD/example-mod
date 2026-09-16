@@ -6,16 +6,21 @@
     "mac": "2.2081",
     "ios": "2.2081"
   },
-  "id": "com.danz.accountstatus",
-  "name": "Discord Status",
+  "id": "com.danz.danzgdpslegacy",
+  "name": "DanzGDPS Legacy",
   "developer": "Danz",
-  "version": "1.0.0",
-  "description": "Discord Status adalah mod yang memberi status kamu ke server mu menggunakan webhook.",
-  "tags": ["utility", "online", "enchanment"],
+  "version": "0.1.0",
+  "description": "DanzGDPS Legacy client features for Level of the Month and server announcements.",
+  "tags": ["danzgdps", "utility", "gdps"],
   "settings": {
-    "webhook-url": {
+    "lotm-api": {
       "type": "string",
-      "name": "Discord Webhook URL",
+      "name": "LOTM API URL",
+      "default": ""
+    },
+    "announcements-api": {
+      "type": "string",
+      "name": "Announcements API URL",
       "default": ""
     }
   }
