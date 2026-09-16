@@ -2,7 +2,6 @@
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/utils/web.hpp>
 #include <matjson.hpp>
-#include <Geode/ui/GeodeUI.hpp>
 
 using namespace geode::prelude;
 
@@ -11,11 +10,6 @@ protected:
     bool init() {
         if (!FLAlertLayer::init(310.f, 220.f, "DanzGDPS Legacy", "Close", nullptr, 1.f))
             return false;
-
-        auto winSize = CCDirector::sharedDirector()->getWinSize();
-        auto menu = CCMenu::create();
-        menu->setPosition({0, 0});
-        m_mainLayer->addChild(menu);
 
         auto lotm = CCLabelBMFont::create("LOTM", "bigFont.fnt");
         lotm->setScale(0.65f);
@@ -37,7 +31,6 @@ protected:
         news->setPosition({155.f, 75.f});
         m_mainLayer->addChild(news);
 
-        // The API URL can be changed later without changing the UI code.
         auto mod = Mod::get();
         auto lotmURL = mod->getSettingValue<std::string>("lotm-api");
         auto announcementsURL = mod->getSettingValue<std::string>("announcements-api");
@@ -47,8 +40,9 @@ protected:
                 if (!res.ok()) return;
                 auto json = res.json();
                 if (!json) return;
-                auto name = json.unwrap().get<std::string>("name").unwrapOr("Unknown Level");
-                auto creator = json.unwrap().get<std::string>("creator").unwrapOr("Unknown Creator");
+                auto value = json.unwrap();
+                auto name = value.get<std::string>("name").unwrapOr("Unknown Level");
+                auto creator = value.get<std::string>("creator").unwrapOr("Unknown Creator");
                 lotmInfo->setString(fmt::format("{} by {}", name, creator).c_str());
             });
         }
@@ -83,24 +77,41 @@ class $modify(DanzMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
 
-        auto menu = CCMenu::create();
-        menu->setPosition({0, 0});
-        this->addChild(menu, 100);
-
-        auto buttonSprite = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
-        if (!buttonSprite) {
-            buttonSprite = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
+        auto mainMenu = this->getChildByID("main-menu");
+        if (!mainMenu) {
+            log::warn("DanzGDPS: main-menu was not found");
+            return true;
         }
-        buttonSprite->setScale(0.8f);
+
+        // Native GD-style square tile. Drop resources/danzgdps-lotm.png later
+        // to replace the fallback with the custom LOTM artwork.
+        auto tile = CCSprite::create("danzgdps-lotm.png");
+        if (!tile) {
+            tile = CCSprite::create("GJ_square01.png");
+        }
+
+        if (!tile) {
+            log::warn("DanzGDPS: failed to create LOTM tile sprite");
+            return true;
+        }
+
+        tile->setScale(1.0f);
+
+        auto label = CCLabelBMFont::create("LOTM", "bigFont.fnt");
+        label->setScale(0.62f);
+        label->setPosition({tile->getContentSize().width / 2.f, 14.f});
+        tile->addChild(label);
 
         auto button = CCMenuItemSpriteExtra::create(
-            buttonSprite,
+            tile,
             this,
             menu_selector(DanzMenuLayer::onDanzGDPS)
         );
-        button->setID("danzgdps-legacy-button");
-        menu->addChild(button);
-        menu->setPosition({25.f, 25.f});
+        button->setID("danzgdps-lotm-button");
+
+        mainMenu->addChild(button);
+        mainMenu->updateLayout();
+
         return true;
     }
 
